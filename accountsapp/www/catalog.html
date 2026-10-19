@@ -1,0 +1,17 @@
+---
+title: Gada Electronics Catalog
+---
+
+{% extends "templates/web.html" %}
+
+{% block page_content %}
+
+<h1>Catalog</h1>
+{% for i in items %}
+  <div>
+    <h5>{{ i.item_name }}</h5>
+    <p>{{ i.category }} · {{ frappe.utils.fmt_money(i.price) }}</p>
+  </div>
+{% endfor %}
+
+{% endblock %}
