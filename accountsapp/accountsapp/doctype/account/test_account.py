@@ -1,22 +1,52 @@
 # Copyright (c) 2026, primalkz and Contributors
 # See license.txt
 
-# import frappe
+import frappe
 from frappe.tests import IntegrationTestCase
 
+from accountsapp.accountsapp.utils import ensure_chart_of_accounts
 
-# On IntegrationTestCase, the doctype test records and all
-# link-field test record dependencies are recursively loaded
-# Use these module variables to add/remove to/from that list
-EXTRA_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
-IGNORE_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
-
+EXTRA_TEST_RECORD_DEPENDENCIES = []
+IGNORE_TEST_RECORD_DEPENDENCIES = []
 
 
 class IntegrationTestAccount(IntegrationTestCase):
-	"""
-	Integration tests for Account.
-	Use this class for testing interactions between multiple components.
-	"""
+	"""Integration tests for Account."""
 
-	pass
+	def test_account_is_created_under_its_parent(self):
+		ensure_chart_of_accounts()
+
+		account = frappe.get_doc({
+			"doctype": "Account",
+			"account_name": "Test Bank",
+			"account_type": "Asset",
+			"parent_account": "Assets",
+		}).insert()
+
+		self.assertEqual(account.name, "Test Bank")
+		self.assertEqual(account.parent_account, "Assets")
+		self.assertEqual(frappe.db.get_value("Account", "Test Bank", "account_type"), "Asset")
+
+	def test_group_account_can_be_created_without_a_parent(self):
+		account = frappe.get_doc({
+			"doctype": "Account",
+			"account_name": "Test Group",
+			"account_type": "Asset",
+			"is_group": 1,
+		}).insert()
+
+		self.assertEqual(account.is_group, 1)
+		self.assertIsNone(account.parent_account)
+
+	def test_chart_of_accounts_is_not_created_twice(self):
+		ensure_chart_of_accounts()
+		before = frappe.db.count("Account")
+
+		ensure_chart_of_accounts()
+
+		self.assertEqual(frappe.db.count("Account"), before)
+		self.assertTrue(frappe.db.exists("Account", "Accounts Receivable"))
+		self.assertTrue(frappe.db.exists("Account", "Accounts Payable"))
+		self.assertTrue(frappe.db.exists("Account", "Cash"))
+		self.assertTrue(frappe.db.exists("Account", "Sales"))
+		self.assertTrue(frappe.db.exists("Account", "Purchases"))

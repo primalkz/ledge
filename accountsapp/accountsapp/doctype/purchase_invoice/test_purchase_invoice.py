@@ -1,22 +1,82 @@
 # Copyright (c) 2026, primalkz and Contributors
 # See license.txt
 
-# import frappe
+import frappe
 from frappe.tests import IntegrationTestCase
 
+from accountsapp.accountsapp.utils import ensure_chart_of_accounts, get_item, get_supplier
 
-# On IntegrationTestCase, the doctype test records and all
-# link-field test record dependencies are recursively loaded
-# Use these module variables to add/remove to/from that list
-EXTRA_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
-IGNORE_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
-
+EXTRA_TEST_RECORD_DEPENDENCIES = []
+IGNORE_TEST_RECORD_DEPENDENCIES = []
 
 
 class IntegrationTestPurchaseInvoice(IntegrationTestCase):
-	"""
-	Integration tests for PurchaseInvoice.
-	Use this class for testing interactions between multiple components.
-	"""
+	"""Integration tests for Purchase Invoice."""
 
-	pass
+	def make_invoice(self, rows, supplier="Test Supplier"):
+		ensure_chart_of_accounts()
+		get_item("T-PUR-1", price=100, stock_qty=10)
+		get_supplier(supplier)
+
+		return frappe.get_doc({
+			"doctype": "Purchase Invoice",
+			"supplier": supplier,
+			"invoice_date": "2026-10-19",
+			"items": rows,
+		}).insert()
+
+	def test_total_is_the_sum_of_the_rows(self):
+		invoice = self.make_invoice([
+			{"item": "T-PUR-1", "qty": 2, "rate": 100},
+			{"item": "T-PUR-1", "qty": 1, "rate": 250},
+		])
+
+		self.assertEqual(invoice.items[0].amount, 200)
+		self.assertEqual(invoice.items[1].amount, 250)
+		self.assertEqual(invoice.total_amount, 450)
+
+	def test_submit_posts_to_the_ledger(self):
+		invoice = self.make_invoice([{"item": "T-PUR-1", "qty": 1, "rate": 100}])
+		invoice.submit()
+
+		entries = frappe.get_all(
+			"Ledger Entry",
+			filters={"voucher_type": "Purchase Invoice", "voucher_no": invoice.name},
+			fields=["account", "debit", "credit"],
+		)
+
+		self.assertEqual(len(entries), 2)
+		by_account = {e.account: e for e in entries}
+		self.assertEqual(by_account["Purchases"].debit, 100)
+		self.assertEqual(by_account["Accounts Payable"].credit, 100)
+		self.assertEqual(by_account["Accounts Payable"].debit, 0)
+
+	def test_cancel_reverses_the_ledger_entries(self):
+		invoice = self.make_invoice([{"item": "T-PUR-1", "qty": 1, "rate": 100}])
+		invoice.submit()
+		invoice.cancel()
+
+		entries = frappe.get_all(
+			"Ledger Entry",
+			filters={"voucher_type": "Purchase Invoice", "voucher_no": invoice.name},
+			fields=["is_cancelled"],
+		)
+
+		self.assertEqual(len(entries), 2)
+		for e in entries:
+			self.assertEqual(e.is_cancelled, 1)
+
+	def test_stock_is_not_touched_by_a_purchase(self):
+		get_item("T-PUR-STOCK", price=100, stock_qty=10)
+		ensure_chart_of_accounts()
+		get_supplier("Stock Supplier")
+
+		invoice = frappe.get_doc({
+			"doctype": "Purchase Invoice",
+			"supplier": "Stock Supplier",
+			"invoice_date": "2026-10-19",
+			"items": [{"item": "T-PUR-STOCK", "qty": 5, "rate": 100}],
+		}).insert()
+		invoice.submit()
+
+		self.assertEqual(frappe.db.get_value("Item", "T-PUR-STOCK", "stock_qty"), 10)
