@@ -2,6 +2,8 @@
 
 import frappe
 
+from frappe.utils import fmt_money
+
 # name, account_type, is_group, parent_account
 CHART_OF_ACCOUNTS = (
 	("Assets", "Asset", 1, None),
@@ -64,3 +66,9 @@ def get_supplier(supplier_name, email=None):
 		"supplier_name": supplier_name,
 		"email": email or f"{supplier_name.lower().replace(' ', '.')}@example.com",
 	}).insert()
+
+
+def format_price(amount, currency=None):
+	"""The amount as it should be shown, with the currency in front of it."""
+	currency = currency or frappe.db.get_default("currency")
+	return fmt_money(amount, currency=currency)

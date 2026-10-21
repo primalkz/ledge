@@ -1,29 +1,81 @@
-{% extends "templates/web.html" %}
+{% extends "templates/website_base.html" %}
 
 {% block page_content %}
-<h1>Gada Electronics</h1>
-<p>Welcome to Gada Electronics!</p>
+<div class="ga-wrap">
 
-<p class="my-4">
-	<a href="/catalog" class="btn btn-primary mr-2">Browse Catalog</a>
-	<a href="/shop" class="btn btn-default">Visit Shop</a>
-</p>
+	<section class="ga-hero">
+		<p class="ga-eyebrow">Gada Electronics</p>
+		<h1 class="ga-display">The onboarding app</h1>
+		<p class="ga-lede">
+			A small shop for Gada Electronics. It sells electronics, and every order
+			is posted to a double-entry ledger.
+		</p>
+		<div class="ga-rule"></div>
+		<div class="ga-actions">
+			<a href="/shop" class="ga-btn ga-btn--solid">Open the shop</a>
+			<a href="/catalog" class="ga-btn">Browse the catalog</a>
+		</div>
+	</section>
 
-<section>
-	<h2>About Us</h2>
-	<p>Gada Electronics is a leading provider of electronic products and solutions. We offer a wide range of products including consumer electronics, industrial electronics, and more.</p>
-</section>
+	<section class="ga-section">
+		<div class="ga-section__head">
+			<p class="ga-eyebrow">What is in the app</p>
+			<h2 class="ga-h2">Vouchers, a ledger and three reports</h2>
+		</div>
+		<div class="ga-grid">
+			<div class="ga-card">
+				<h3 class="ga-card__title">Sales and purchase invoices</h3>
+				<p class="ga-note">
+					Create them, submit them, cancel them. Each one writes a balanced
+					pair of ledger entries.
+				</p>
+			</div>
+			<div class="ga-card">
+				<h3 class="ga-card__title">Journal entries</h3>
+				<p class="ga-note">
+					Move value between accounts. The entry has to balance or it will
+					not save.
+				</p>
+			</div>
+			<div class="ga-card">
+				<h3 class="ga-card__title">Payments</h3>
+				<p class="ga-note">
+					Record what a customer paid. The invoice is marked paid and the
+					ledger is updated.
+				</p>
+			</div>
+			<div class="ga-card">
+				<h3 class="ga-card__title">Reports</h3>
+				<p class="ga-note">
+					Chart of accounts, profit and loss, and the balance sheet. All
+					three read from the same ledger.
+				</p>
+			</div>
+		</div>
+	</section>
 
-<section>
-	<h2>Our Products</h2>
-	<ul>
-		<li>Consumer Electronics</li>
-		<li>Industrial Electronics</li>
-		<li>Electronic Components</li>
-	</ul>
-</section>
+	<section class="ga-section">
+		<div class="ga-section__head">
+			<p class="ga-eyebrow">How an order works</p>
+			<h2 class="ga-h2">What happens when you order</h2>
+		</div>
+		<ol class="ga-steps">
+			<li>
+				<strong>Add items to the cart.</strong>
+				Prices and stock are read again on the server when you check out.
+			</li>
+			<li>
+				<strong>Submit the order.</strong>
+				A sales invoice is created and submitted. The customer is debited,
+				sales are credited, and stock comes off the shelf.
+			</li>
+			<li>
+				<strong>Look at the ledger.</strong>
+				Open the balance sheet or the profit and loss report. The order is
+				already in there.
+			</li>
+		</ol>
+	</section>
 
-<section>
-	<h2>Contact Us</h2>
-</section>
+</div>
 {% endblock %}

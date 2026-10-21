@@ -1,39 +1,49 @@
-{% extends "templates/web.html" %}
+{% extends "templates/website_base.html" %}
 
 {% block page_content %}
-<h1>Shop</h1>
-<p class="text-muted">Pick a few items. Prices are re-checked on the server when you order.</p>
+<div class="ga-wrap">
 
-<div class="row mt-4">
-	<div class="col-md-8">
-		{% for i in items %}
-		<div class="d-flex justify-content-between align-items-center border rounded p-3 mb-2">
-			<div>
-				<div class="fw-semibold">{{ i.item_name }}</div>
-				<div class="text-muted small">{{ i.category }} · {{ i.stock_qty }} in stock</div>
+	<section class="ga-hero">
+		<p class="ga-eyebrow">Shop</p>
+		<h1 class="ga-display">Put it in the cart</h1>
+		<p class="ga-lede">Prices and stock are checked again on the server when you place the order.</p>
+		<div class="ga-rule"></div>
+	</section>
+
+	<div class="ga-split">
+		<div class="ga-split__main">
+			{% for i in items %}
+			<div class="ga-product">
+				<div class="ga-product__body">
+					<h2 class="ga-card__title">{{ i.item_name }}</h2>
+					<p class="ga-note ga-note--sm">{{ i.category }} · {{ i.stock_qty }} in stock</p>
+				</div>
+				<div class="ga-product__side">
+					<span class="ga-price">{{ i.price_str }}</span>
+					<button class="ga-btn ga-btn--sm" data-add-item="{{ i.name }}">Add</button>
+				</div>
 			</div>
-			<div class="text-end">
-				<div class="mb-1">{{ frappe.utils.fmt_money(i.price) }}</div>
-				<button class="btn btn-sm btn-primary" data-add-item="{{ i.name }}">Add</button>
-			</div>
+			{% else %}
+			<p class="ga-note">Nothing in stock right now. Check back soon.</p>
+			{% endfor %}
 		</div>
-		{% endfor %}
-	</div>
 
-	<div class="col-md-4">
-		<div class="border rounded p-3">
-			<h5>Cart</h5>
+		<aside class="ga-panel">
+			<h2 class="ga-card__title">Cart</h2>
 			<div id="ga-cart"></div>
 			{% if customer %}
-				<button id="ga-checkout" class="btn btn-primary w-100 mt-3">Checkout</button>
+			<button id="ga-checkout" class="ga-btn ga-btn--solid ga-btn--block">Checkout</button>
 			{% else %}
-				<a href="/login?redirect-to=/shop" class="btn btn-primary w-100 mt-3">Log in to order</a>
+			<a href="/login?redirect-to=/shop" class="ga-btn ga-btn--solid ga-btn--block">Log in to order</a>
 			{% endif %}
-		</div>
+		</aside>
 	</div>
+
 </div>
 
 <script>
 	window.GA_ITEMS = {{ items | tojson }};
+	window.GA_CURRENCY = "{{ currency }}";
+	window.GA_CURRENCY_SYMBOL = "{{ currency_symbol }}";
 </script>
 {% endblock %}

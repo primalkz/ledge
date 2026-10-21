@@ -1,5 +1,6 @@
 (() => {
 	const CART_KEY = "ga_cart";
+	const SYMBOL = window.GA_CURRENCY_SYMBOL || window.GA_CURRENCY || "";
 	const ITEMS = Object.fromEntries((window.GA_ITEMS || []).map((i) => [i.name, i]));
 
 	const readCart = () => {
@@ -11,7 +12,7 @@
 	};
 
 	const writeCart = (cart) => localStorage.setItem(CART_KEY, JSON.stringify(cart));
-	const money = (v) => "₹" + (v || 0).toFixed(2);
+	const money = (v) => (SYMBOL ? `${SYMBOL} ` : "") + (v || 0).toFixed(2);
 	const total = (cart) => cart.reduce((s, l) => s + (ITEMS[l.item]?.price || 0) * l.qty, 0);
 
 	const addItem = (item) => {
@@ -39,19 +40,23 @@
 
 		const cart = readCart();
 		if (!cart.length) {
-			el.innerHTML = '<p class="text-muted small mb-0">Your cart is empty.</p>';
+			el.innerHTML = '<p class="ga-empty">Your cart is empty.</p>';
 			return;
 		}
 
 		el.innerHTML = cart
 			.map((l) => {
 				const item = ITEMS[l.item] || {};
+				const name = item.item_name || l.item;
 				return `
-					<div class="d-flex justify-content-between align-items-center py-1 border-bottom">
-						<span class="small">${item.item_name || l.item} × ${l.qty}</span>
-						<span class="text-nowrap">
-							<button class="btn btn-sm btn-light" data-qty="-1" data-item="${l.item}">−</button>
-							<button class="btn btn-sm btn-light" data-qty="1" data-item="${l.item}">+</button>
+					<div class="ga-line">
+						<span class="ga-line__name">${name} &times; ${l.qty}</span>
+						<span class="ga-product__side">
+							<span class="ga-price">${money((item.price || 0) * l.qty)}</span>
+							<span class="ga-qty">
+								<button data-qty="-1" data-item="${l.item}" aria-label="Remove one ${name}">&minus;</button>
+								<button data-qty="1" data-item="${l.item}" aria-label="Add one ${name}">+</button>
+							</span>
 						</span>
 					</div>`;
 			})
@@ -59,7 +64,7 @@
 
 		el.insertAdjacentHTML(
 			"beforeend",
-			`<div class="d-flex justify-content-between pt-2 fw-semibold">
+			`<div class="ga-total">
 				<span>Total</span><span>${money(total(cart))}</span>
 			</div>`
 		);

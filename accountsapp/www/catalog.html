@@ -2,16 +2,39 @@
 title: Gada Electronics Catalog
 ---
 
-{% extends "templates/web.html" %}
+{% extends "templates/website_base.html" %}
 
 {% block page_content %}
+<div class="ga-wrap">
 
-<h1>Catalog</h1>
-{% for i in items %}
-  <div>
-    <h5>{{ i.item_name }}</h5>
-    <p>{{ i.category }} · {{ frappe.utils.fmt_money(i.price) }}</p>
-  </div>
-{% endfor %}
+	<section class="ga-hero">
+		<p class="ga-eyebrow">Catalog</p>
+		<h1 class="ga-display">{{ items | length }} product{{ "" if items | length == 1 else "s" }} in stock</h1>
+		<p class="ga-lede">Everything we currently have on the shelf, grouped by category.</p>
+		<div class="ga-rule"></div>
+		<div class="ga-actions">
+			<a href="/shop" class="ga-btn ga-btn--solid">Open the shop</a>
+		</div>
+	</section>
 
+	<section class="ga-section">
+		{% for i in items %}
+		<div class="ga-product">
+			<div class="ga-product__body">
+				<h2 class="ga-card__title">{{ i.item_name }}</h2>
+				<p class="ga-note ga-note--sm">{{ i.category }} · {{ i.stock_qty }} in stock</p>
+				{% if i.description %}
+				<p class="ga-note" style="margin-top: 6px;">{{ i.description }}</p>
+				{% endif %}
+			</div>
+			<div class="ga-product__side">
+				<span class="ga-price">{{ i.price_str }}</span>
+			</div>
+		</div>
+		{% else %}
+		<p class="ga-note">Nothing in stock right now. Check back soon.</p>
+		{% endfor %}
+	</section>
+
+</div>
 {% endblock %}
