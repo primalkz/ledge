@@ -27,16 +27,27 @@ class IntegrationTestPurchaseInvoice(IntegrationTestCase):
 
 	def test_total_is_the_sum_of_the_rows(self):
 		invoice = self.make_invoice([
-			{"item": "T-PUR-1", "qty": 2, "rate": 100},
-			{"item": "T-PUR-1", "qty": 1, "rate": 250},
+			{"item": "T-PUR-1", "qty": 2, "amount": 200},
+			{"item": "T-PUR-1", "qty": 1, "amount": 250},
 		])
 
-		self.assertEqual(invoice.items[0].amount, 200)
-		self.assertEqual(invoice.items[1].amount, 250)
 		self.assertEqual(invoice.total_amount, 450)
 
+	def test_rate_is_worked_out_from_the_amount(self):
+		invoice = self.make_invoice([{"item": "T-PUR-1", "qty": 4, "amount": 100}])
+
+		self.assertEqual(invoice.items[0].rate, 25)
+		self.assertEqual(invoice.items[0].amount, 100)
+		self.assertEqual(invoice.total_amount, 100)
+
+	def test_rate_is_zero_without_a_quantity(self):
+		invoice = self.make_invoice([{"item": "T-PUR-1", "qty": 0, "amount": 100}])
+
+		self.assertEqual(invoice.items[0].rate, 0)
+		self.assertEqual(invoice.total_amount, 100)
+
 	def test_submit_posts_to_the_ledger(self):
-		invoice = self.make_invoice([{"item": "T-PUR-1", "qty": 1, "rate": 100}])
+		invoice = self.make_invoice([{"item": "T-PUR-1", "qty": 1, "amount": 100}])
 		invoice.submit()
 
 		entries = frappe.get_all(
@@ -52,7 +63,7 @@ class IntegrationTestPurchaseInvoice(IntegrationTestCase):
 		self.assertEqual(by_account["Accounts Payable"].debit, 0)
 
 	def test_cancel_reverses_the_ledger_entries(self):
-		invoice = self.make_invoice([{"item": "T-PUR-1", "qty": 1, "rate": 100}])
+		invoice = self.make_invoice([{"item": "T-PUR-1", "qty": 1, "amount": 100}])
 		invoice.submit()
 		invoice.cancel()
 
@@ -75,7 +86,7 @@ class IntegrationTestPurchaseInvoice(IntegrationTestCase):
 			"doctype": "Purchase Invoice",
 			"supplier": "Stock Supplier",
 			"invoice_date": "2026-10-19",
-			"items": [{"item": "T-PUR-STOCK", "qty": 5, "rate": 100}],
+			"items": [{"item": "T-PUR-STOCK", "qty": 5, "amount": 500}],
 		}).insert()
 		invoice.submit()
 

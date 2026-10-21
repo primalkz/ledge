@@ -27,7 +27,8 @@ class PurchaseInvoice(Document):
 
 	def validate(self):
 		for row in self.items:
-			row.amount = (row.qty or 0) * (row.rate or 0)
+			qty = row.qty or 0
+			row.rate = row.amount / qty if qty else 0
 		self.total_amount = sum(row.amount for row in self.items)
 
 	def on_submit(self):
